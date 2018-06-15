@@ -2,21 +2,26 @@ public class Foothill09 {
     public static void main(String[] args) {
         String[] rpnExpressions = {
                 new String("3"),
-                new String("23+"),
-                new String("23-"),
-                new String("23*"),
-                new String("23/"),
-                new String("2345+-*"),
-                new String("2345/+*"),
-                new String("234+-"),
+                new String("2 3 +"),
+                new String("2 3 -"),
+                new String("2 3 *"),
+                new String("6 3 /"),
+                new String("2 3 4 5 + - *"),
+                new String("2 3 4 2 / + *"),
+                new String("2 3 4 + -"),
+                new String(""),
+                new String("1 +"),
+                new String("1 1"),
+                new String("1 1 fly"),
+                new String("5 8 ")
         };
         for (int i = 0; i < rpnExpressions.length; i++) {
             try {
                 RpnCalculator.eval(rpnExpressions[i]);
-                System.out.println("Expression is " + rpnExpressions[i] + " and solution is " +
+                System.out.println(rpnExpressions[i] + " = " +
                         RpnCalculator.eval(rpnExpressions[i]));
             } catch (RuntimeException e) {
-                System.out.println("Error is with " + rpnExpressions[i]);
+                System.out.println("\"" + rpnExpressions[i] + "\"" + " fails to be evaluated: " + e.getMessage());
             }
         }
     }
@@ -39,29 +44,37 @@ class RpnCalculator {
 
     private static int eval(String[] tokens) {
         IntegerStack integerstack = new IntegerStack(10);
+        int size = 0;
         for (int i = 0; i < tokens.length; i++) {
             try {
                 int tob = Integer.parseInt(tokens[i]);
                 integerstack.push(tob);
+                size++;
             } catch (NumberFormatException e) {
                 int op2 = integerstack.pop();
                 int op1 = integerstack.pop();
-                if (tokens[i].equals(additionOperation)){
-                    op1 += op2;
-                } else if (tokens[i].equals(subtractionOperation)){
-                    op1 -= op2;
-                }
-                else if (tokens[i].equals(multiplicationOperation)){
-                    op1 = multiply(op1, op2);
-                }
-                else if (tokens[i].equals(divisionOperation)){
-                    op1 /= op2;
-                }else {
-                    throw new RuntimeException("Value in string was neither operand or operator");
+                switch (tokens[i]) {
+                    case additionOperation:
+                        op1 += op2;
+                        break;
+                    case subtractionOperation:
+                        op1 -= op2;
+                        break;
+                    case multiplicationOperation:
+                        op1 = multiply(op1, op2);
+                        break;
+                    case divisionOperation:
+                        op1 /= op2;
+                        break;
+                    default:
+                        throw new RuntimeException("Unknown operator " + tokens[i]);
                 }
                 integerstack.push(op1);
+                size--;
             }
-            integerstack.peek();
+        }
+        if (size > 1) {
+            throw new RuntimeException("Not enough operator");
         }
         return integerstack.pop();
     }
@@ -80,7 +93,6 @@ class RpnCalculator {
         }
         return a + multiply(a, b - 1);
     }
-
 }
 
 class IntegerStack {
@@ -99,14 +111,14 @@ class IntegerStack {
 
     public void push(int item) {
         if (isFull()) {
-            throw new RuntimeException("Stack is full when pushing " + item);
+            throw new RuntimeException("Integerstack is full when pushing " + item);
         }
         stack[topOfStack++] = item;
     }
 
     public int pop() {
         if (isEmpty()) {
-            throw new RuntimeException("Stack is empty");
+            throw new RuntimeException("Integerstack is empty");
         }
         return stack[--topOfStack];
     }
@@ -118,11 +130,4 @@ class IntegerStack {
     public boolean isEmpty() {
         return (topOfStack == 0);
     }
-    public void peek(){
-        for (int x: stack){
-            System.out.println(x);
-        }
-    }
 }
-
-
