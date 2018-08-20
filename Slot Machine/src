@@ -1,0 +1,180 @@
+import java.util.Scanner;
+
+public class Foothill07 {
+    // class constants
+    static final String CHERRIES = "cherries";
+    static final String SEVEN = "7";
+    static final String BAR = "BAR";
+    static final String SPACE = "(space)";
+    static Scanner bob = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        while (true) {
+            TripleString pullVal = pull();
+            int betValue = getBet();
+            int payMultiplier = getPayMultiplier(pullVal);
+            int winnings = betValue * payMultiplier;
+            if (betValue == END_TRIGGER) {
+                break;
+            }
+            display(pullVal, winnings);
+        }
+    }
+
+    public static void display(TripleString thePull, int winnings) {
+        System.out.println("your pull is: ");
+        System.out.println(thePull);
+        if (winnings > 0) {
+            System.out.println("Congratulations, you win: " +
+                    winnings + "\n");
+        } else {
+            System.out.println("Sorry - you lost\n");
+        }
+    }
+
+    static final int END_TRIGGER = 0;
+
+    public static int getBet() {
+        while (true) {
+            System.out.println("Enter your bet(1-50 and 0 if you want to quit): ");
+            int betAmount = bob.nextInt();
+            if (betAmount == END_TRIGGER) {
+                System.out.println("Thanks for coming to Sri's casino.");
+                return END_TRIGGER;
+            } else if (betAmount >= 1 && betAmount <= 50) {
+                return betAmount;
+            }
+            System.out.println("Error in input");
+        }
+    }
+
+    public static TripleString pull() {
+        String firstPull = randString();
+        String secondPull = randString();
+        String thirdPull = randString();
+
+        TripleString tripleStringInstance = new TripleString(firstPull, secondPull, thirdPull);
+        return tripleStringInstance;
+    }
+
+    static final double probCherries = .39;
+    static final double probBar = .78;
+    static final double probSeven = .92;
+
+    private static String randString() {
+        double randomDecimal = Math.random();
+        if (randomDecimal <= probCherries) {
+            return CHERRIES;
+        } else if (randomDecimal <= probBar && randomDecimal > probCherries) {
+            return BAR;
+        } else if (randomDecimal <= probSeven && randomDecimal > probBar) {
+            return SEVEN;
+        }
+        return SPACE;
+    }
+
+    public static int getPayMultiplier(TripleString thePull) {
+        int payMultiplier = 0;
+        String roll1 = thePull.getString1();
+        String roll2 = thePull.getString2();
+        String roll3 = thePull.getString3();
+        if (roll1.equals(SEVEN) && roll2.equals(SEVEN) && roll3.equals(SEVEN)) {
+            payMultiplier = 100;
+            //return payMultiplier;
+        } else if (roll1.equals(BAR) && roll2.equals(BAR) && roll3.equals(BAR)) {
+            payMultiplier = 50;
+            //return payMultiplier;
+        } else if (roll1.equals(CHERRIES)) {
+            if (!roll2.equals(CHERRIES)) {
+                payMultiplier = 5;
+                //return payMultiplier;
+            } else if (roll2.equals(CHERRIES)) {
+                if (!roll3.equals(CHERRIES)) {
+                    payMultiplier = 15;
+                    //return payMultiplier;
+                } else if (roll3.equals(CHERRIES)) {
+                    payMultiplier = 30;
+                    //return payMultiplier;
+                }
+            }
+        }
+        return payMultiplier;
+    }
+}
+
+class TripleString {
+    public static final int MAX_LEN = 50;
+    public static final int MIN_LEN = 1;
+    public static final String DEFAULT_STRING = "(undefined)";
+
+    private String string1, string2, string3;
+
+    // constructors
+    TripleString() {
+        string1 = DEFAULT_STRING;
+        string2 = DEFAULT_STRING;
+        string3 = DEFAULT_STRING;
+    }
+
+    TripleString(String str1, String str2, String str3) {
+        if (!setString1(str1)) {
+            string1 = DEFAULT_STRING;
+        }
+        if (!setString2(str2)) {
+            string2 = DEFAULT_STRING;
+        }
+        if (!setString3(str3)) {
+            string3 = DEFAULT_STRING;
+        }
+    }
+
+    // mutators
+    public boolean setString1(String str) {
+        if (!validateString(str)) {
+            return false;
+        }
+        string1 = str;
+        return true;
+    }
+
+    public boolean setString2(String str) {
+        if (!validateString(str)) {
+            return false;
+        }
+        string2 = str;
+        return true;
+    }
+
+    public boolean setString3(String str) {
+        if (!validateString(str)) {
+            return false;
+        }
+        string3 = str;
+        return true;
+    }
+
+    // accessors
+    public String getString1() {
+        return string1;
+    }
+
+    public String getString2() {
+        return string2;
+    }
+
+    public String getString3() {
+        return string3;
+    }
+
+    // notice that because validateString does not make use of instance data
+    // it should be declared static
+    private static boolean validateString(String str) {
+        return str != null && str.length() <= MAX_LEN && str.length() >= MIN_LEN;
+    }
+
+    public String toString() {
+        String retVal;
+        retVal = string1 + ", " + string2 + ", " + string3;
+        return retVal;
+    }
+}
