@@ -1,0 +1,155 @@
+import java.util.NoSuchElementException;
+import java.util.function.BiFunction;
+
+public class Foothill10 {
+    public static void main(String[] args) {
+        String[] rpnExpressions = {
+                "3",
+                "2 3 +",
+                "2 3 -",
+                "2 3 *",
+                "6 3 /",
+                "2 3 4 5 + - *",
+                "2 3 4 2 / + *",
+                "2 3 4 + -",
+                "",
+                "1 +",
+                "1 1",
+                "1 1 fly",
+                "5 8 ",
+                "1 2 5 max pow",
+                "1 2 5 min pow",
+                "1 2 5 max min",
+                "1 2 max",
+                "1 2 min",
+                "1 2 pow"
+        };
+
+        for (int i = 0; i < rpnExpressions.length; i++) {
+            try {
+                int result = RpnCalculator.eval(rpnExpressions[i]);
+                System.out.println("\"" + rpnExpressions[i] + "\" = "  + result);
+            } catch (RuntimeException e) {
+                System.out.println("\"" + rpnExpressions[i] + "\" fails to be evaluated: " + e.getMessage());
+            }
+        }
+    }
+}
+class Operation{
+    private String operator;
+    private BiFunction<Integer, Integer, Integer> function;
+    public Operation(String operator, BiFunction<Integer, Integer, Integer> function){
+        this.operator=operator;
+        this.function=function;
+    }
+
+    public String getOperator() {
+        return operator;
+    }
+
+    public BiFunction<Integer, Integer, Integer> getFunction() {
+        return function;
+    }
+
+}
+
+class RpnCalculator {
+    private static final Operation[] operations = {
+            new Operation("+",(integer, integer2) -> integer2+integer),
+            new Operation("-",(integer, integer2) -> integer2-integer),
+            new Operation("*",(integer, integer2) -> multiply(integer2,integer)),
+            new Operation("/",(integer, integer2) -> integer2/integer),
+            new Operation("max",(integer, integer2) -> max(integer2,integer)),
+            new Operation("min",(integer, integer2) -> min(integer2,integer)),
+            new Operation("pow",(integer, integer2) -> power(integer2,integer)),
+    };
+    private static Operation lookupOperation(String operator){
+        for (int i=0; i < operations.length; i++) {
+            if(operator.equals(operations[i].getOperator())){
+                return operations[i];
+            }
+        }
+        throw new NoSuchElementException("Unknown operator ");
+    }
+    public static int eval(String rpnExpression) {
+        String[] tokens = parse(rpnExpression);
+        return eval(tokens);
+    }
+    private static String[] parse(String rpnExpression) {
+        // trim() removes leading and trailing space.  split("\\s+") splits on one or more spaces.
+        return rpnExpression.trim().split("\\s+");
+    }
+    private static int eval(String[] tokens) {
+        IntegerStack integerStack = new IntegerStack(tokens.length);
+        for (int i = 0; i < tokens.length; i++) {
+            String token = tokens[i];
+            try {
+                // If the token is an integer, push it onto the stack.
+                int integer = Integer.parseInt(token);
+                integerStack.push(integer);
+            } catch (NumberFormatException e) {
+                Operation instance=lookupOperation(tokens[i]);
+                int operand1 = integerStack.pop();
+                int operand2 = integerStack.pop();
+                BiFunction<Integer,Integer,Integer> function=instance.getFunction() ;
+                int result=function.apply(operand1,operand2);
+                integerStack.push(result);
+            }
+        }
+        int result = integerStack.pop();
+        if (integerStack.isEmpty()) {
+            // If the stack still has integers in it, there's not enough operators.
+            return result;
+        }
+        throw new RuntimeException ("Not enough operator");
+    }
+    private static int multiply(int a, int b) {
+        if (b < 0) {
+            return -multiply(a, -b);
+        } else if (b == 0) {
+            return 0;
+        } else {
+            return a + multiply(a, b - 1);
+        }
+    }
+    private static int power(int base, int exponent) {
+        return (int) Math.pow(base, exponent);
+    }
+    private static int max(int a, int b) {
+        return Math.max(a, b);
+    }
+    private static int min(int a, int b) {
+        return Math.min(a, b);
+    }
+}
+
+class IntegerStack {
+    public static final int MIN_SIZE = 0;
+    private int stack[];
+    private int topOfStack;
+    public IntegerStack(int size) {
+        if (size <= MIN_SIZE) {
+            throw new RuntimeException("Size for stack should not be less than or equal to " + MIN_SIZE);
+        }
+        topOfStack = 0;
+        stack = new int[size];
+    }
+    public void push(int item) {
+        if (isFull()) {
+            throw new RuntimeException("IntegerStack is full when pushing + " + item);
+        }
+        stack[topOfStack++] = item;
+    }
+    public int pop() {
+        if (isEmpty()) {
+            throw new RuntimeException("IntegerStack is empty");
+        }
+        return stack[--topOfStack];
+    }
+    public boolean isEmpty() {
+        return (topOfStack == 0);
+    }
+    public boolean isFull() {
+        return (topOfStack == stack.length);
+    }
+}
